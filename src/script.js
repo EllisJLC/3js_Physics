@@ -35,9 +35,20 @@ debugObject.createBox = () => {
     )
 }
 
+debugObject.reset = () => {
+    for (const object of objectsToUpdate) {
+        object.body.removeEventListener('collide', playHitSound)
+        world.removeBody(object.body)
+
+        scene.remove(object.mesh)
+    }
+    objectsToUpdate.splice(0, objectsToUpdate.length)
+}
+
 const gui = new dat.GUI()
 gui.add(debugObject, 'createSphere')
 gui.add(debugObject, 'createBox')
+gui.add(debugObject, 'reset')
 
 
 /**
@@ -48,6 +59,19 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+
+// Sounds
+const hitSound = new Audio('/sounds/hit.mp3')
+
+const playHitSound = (collision) => {
+    const collisionImpact = collision.contact.getImpactVelocityAlongNormal()
+    if (collisionImpact > 1.5) {
+        hitSound.volume = Math.random() // scales 0-1
+        hitSound.currentTime = 0
+        hitSound.play()
+    }
+    
+}
 
 /**
  * Textures
@@ -223,6 +247,7 @@ const createSphere = (radius, position) => {
         material: defaultMaterial,
     })
     body.position.copy(position)
+    body.addEventListener('collide', playHitSound)
     world.addBody(body)
 
     // Set objects to update
@@ -251,6 +276,7 @@ const createBox = (width, height, depth, position) => {
         material: defaultMaterial,
     })
     body.position.copy(position)
+    body.addEventListener('collide', playHitSound)
     world.addBody(body)
 
     // Set objects to update
